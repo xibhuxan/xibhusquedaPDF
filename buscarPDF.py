@@ -14,7 +14,7 @@ def inicializar_archivos():
 
 def crear_readme():
     contenido = """
-Hecho por CarlosMR - github.com/xibhuxan    
+Hecho por CarlosMR - https://github.com/xibhuxan/xibhusquedaPDF 
     
 Este programa busca textos en archivos PDF dentro de las rutas especificadas en rutas.txt.
 
@@ -26,7 +26,7 @@ Archivos utilizados:
 
 Modo de uso:
 1. Agregue rutas en rutas.txt.
-2. Agregue textos a buscar en busquedas.txt o introdúzcalos manualmente en la terminal.
+2. Agregue textos a buscar en busquedas.txt una por línea o introdúzcalos manualmente en la terminal.
 3. Ejecute el programa y revise resultados.txt.
 """
     with open("README.txt", "w", encoding="utf-8") as f:
