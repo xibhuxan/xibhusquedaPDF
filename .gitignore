@@ -1,0 +1,21 @@
+# Entorno virtual
+venv/
+
+# Archivos de compilación de PyInstaller
+dist/
+build/
+*.spec
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Carpeta de PDFs encontrados (puede generarse en cada ejecución)
+PDF/
+
+# Archivos de sistema (Windows/macOS/Linux)
+.DS_Store
+Thumbs.db
+
