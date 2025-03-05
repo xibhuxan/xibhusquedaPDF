@@ -1,7 +1,7 @@
 
-# xibhusquedaPDF - Buscador de Texto en PDFs
+# xibhusquedaPDF - Buscador de PDFs por medio de texto interno
 
-Este programa busca textos en archivos PDF dentro de rutas especificadas.
+Este programa busca PDF que contengan un texto concreto dentro de rutas especificadas.
 
 ## Requisitos
 - Python 3.10 o superior
