@@ -31,6 +31,11 @@ Si quieres generar un `.exe`, usa:
   ```
 
 ## Changelog
+### v1.2.0
+- Ejecución multihilo para mayor rapidez.
+- Arreglado el no mostrar los no encontrados.
+- Muestra la cantidad de duplicados de los textos a buscar.
+
 ### v1.1.0
 - Ahora busca todas las coincidencias sin detenerse en la primera.
 - Se agregó timestamp a cada resultado en `resultados.txt`.
