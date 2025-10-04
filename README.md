@@ -1,7 +1,7 @@
 
-# xibhusquedaPDF - Buscador de PDFs por medio de texto interno
+# XibhusquedaPDF - Buscador de PDFs por medio de texto interno
 
-Este programa busca PDF que contengan un texto concreto dentro de rutas especificadas.
+Este programa busca PDF que contengan un texto concreto dentro de rutas específicas.
 
 ## Requisitos
 - Python 3.10 o superior
@@ -12,25 +12,30 @@ Este programa busca PDF que contengan un texto concreto dentro de rutas especifi
   ```
 
 ## Uso
-1. Especifica las carpetas en `rutas.txt`, una por línea.
-2. Escribe los textos a buscar en `busquedas.txt`, una por línea.
+1. Especifica las carpetas añadiendo desde la interfaz.
+2. Escribe los textos a buscar, uno por línea, en un archivo txt y súbelo a la interfaz, o añade de uno en uno.
 3. Ejecuta:
 
    ```
-   python buscarPDF.py
+   python Xibhusqueda.py
    ```
 
-Los PDFs encontrados se copiarán a la carpeta `PDF/`, y los resultados se guardarán en `resultados.txt`.
+Los PDFs encontrados se copiarán a la carpeta `PDF/`, y los resultados se guardarán en `rutas_encontradas.txt`.
 
 ## Compilación para Windows
 Si quieres generar un `.exe`, usa:
 
   ```
   pip install pyinstaller
-  pyinstaller --onefile --console buscarPDF.py
+  pyinstaller --onefile --console Xibhusqueda.py
   ```
 
 ## Changelog
+
+### v2.0.0
+- Interfaz gráfica.
+- Eliminado multihilo.
+
 ### v1.2.0
 - Ejecución multihilo para mayor rapidez.
 - Arreglado el no mostrar los no encontrados.
