@@ -27,7 +27,13 @@ Si quieres generar un `.exe`, usa:
 
   ```
   pip install pyinstaller
-  pyinstaller --onefile --console Xibhusqueda.py
+  pyinstaller --onefile --noconsole --icon=logo.ico Xibhusqueda.py
+  ```
+Para un ejecutable de linux:
+
+  ```
+  pip install pyinstaller
+  pyinstaller --onefile --noconsole Xibhusqueda.py
   ```
 
 ## Changelog
