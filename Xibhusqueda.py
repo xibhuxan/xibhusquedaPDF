@@ -2,13 +2,14 @@
 import sys
 import os
 import shutil
+import json
 from pathlib import Path
 from datetime import datetime
 from typing import List, Set
 
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
-    QFileDialog, QMessageBox, QLineEdit, QLabel, QProgressBar, QTableWidget,
+    QFileDialog, QMessageBox, QLabel, QProgressBar, QTableWidget,
     QTableWidgetItem, QHeaderView, QAbstractItemView, QInputDialog
 )
 from PySide6.QtCore import Qt, QThread, Signal
@@ -36,7 +37,6 @@ class SearchWorker(QThread):
             processed = 0
             self.log_message.emit(f"Iniciando búsqueda: {total} PDF(s) a revisar.")
             
-            # Keep a set of keywords found to avoid repeated logging per PDF if you prefer
             for pdf in pdf_paths:
                 if not self._is_running:
                     self.log_message.emit("Búsqueda cancelada por el usuario.")
@@ -45,7 +45,6 @@ class SearchWorker(QThread):
                 try:
                     matches = self._check_pdf_for_keywords(pdf, self.keywords)
                     if matches:
-                        # For each matched keyword emit a found signal (one per keyword)
                         for kw in matches:
                             self.found_pdf.emit(kw, pdf)
                         self.log_message.emit(f"[{processed}/{total}] Encontrado en: {pdf} -> {', '.join(matches)}")
@@ -73,7 +72,6 @@ class SearchWorker(QThread):
         matched = set()
         with open(pdf_path, "rb") as fh:
             reader = PyPDF2.PdfReader(fh)
-            # Iterate pages one by one and stop early if all keywords matched
             for page in reader.pages:
                 if not self._is_running:
                     break
@@ -87,10 +85,6 @@ class SearchWorker(QThread):
                 for kw in keywords:
                     if kw.lower() in text_lower:
                         matched.add(kw)
-                # small optimization: if all keywords matched, break
-                # (optional; remove if you want to find duplicates across PDF)
-                # if len(matched) == len(keywords):
-                #     break
         return matched
 
 # --------- Main Application ----------
@@ -105,6 +99,7 @@ class PDFSearcherApp(QWidget):
         self.output_dir = str(self.base_dir / "PDF")
         os.makedirs(self.output_dir, exist_ok=True)
         self.results_txt = str(self.base_dir / "rutas_encontradas.txt")
+        self.config_file = self.base_dir / "config.json"
         
         self.folders: List[str] = []
         self.keywords: List[str] = []
@@ -112,6 +107,7 @@ class PDFSearcherApp(QWidget):
         self.worker: SearchWorker | None = None
         
         self._build_ui()
+        self.load_config()  # cargar carpetas al iniciar
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -180,20 +176,43 @@ class PDFSearcherApp(QWidget):
 
         self.setLayout(layout)
 
+    # ----- Config persistence -----
+    def load_config(self):
+        """Carga carpetas desde config.json"""
+        if self.config_file.exists():
+            try:
+                with open(self.config_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self.folders = data.get("folders", [])
+                self.list_folders.clear()
+                for folder in self.folders:
+                    self.list_folders.addItem(folder)
+            except Exception as e:
+                print(f"No se pudo cargar config: {e}")
+
+    def save_config(self):
+        """Guarda carpetas en config.json"""
+        data = {"folders": self.folders}
+        try:
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            print(f"No se pudo guardar config: {e}")
+
     # ----- Folder management -----
     def add_folders(self):
         folders = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta (Pulse Cancel para seleccionar varias con repetición)...")
-        # PySide6 QFileDialog doesn't natively support multi-directory selection across platforms,
-        # so allow repeated selection. Alternatively, use native file dialogs in a loop.
         if folders:
             self.folders.append(folders)
             self.list_folders.addItem(folders)
+            self.save_config()
 
     def remove_selected_folder(self):
         row = self.list_folders.currentRow()
         if row >= 0:
             self.folders.pop(row)
             self.list_folders.takeItem(row)
+            self.save_config()
 
     # ----- Keywords management -----
     def load_keywords_from_txt(self):
@@ -203,7 +222,6 @@ class PDFSearcherApp(QWidget):
         try:
             with open(path, "r", encoding="utf-8") as f:
                 lines = [line.strip() for line in f if line.strip()]
-            # Add ignoring duplicates
             existing = set(self.keywords)
             added = 0
             for l in lines:
@@ -238,13 +256,11 @@ class PDFSearcherApp(QWidget):
             QMessageBox.warning(self, "Atención", "Añade al menos un número de serie / texto a buscar.")
             return
 
-        # Disable UI controls that shouldn't be used during search
         self.btn_start.setEnabled(False)
         self.btn_cancel.setEnabled(True)
         self.table.setRowCount(0)
         self.progress_bar.setValue(0)
 
-        # Start worker thread
         self.worker = SearchWorker(self.folders, self.keywords, self.output_dir)
         self.worker.update_progress.connect(self._on_progress_update)
         self.worker.found_pdf.connect(self._on_found_pdf)
@@ -266,7 +282,6 @@ class PDFSearcherApp(QWidget):
             self.progress_bar.setValue(0)
 
     def _on_found_pdf(self, keyword: str, pdf_path: str):
-        # Copy the file to output_dir with unique name
         src = Path(pdf_path)
         dest_name = src.name
         dest = Path(self.output_dir) / dest_name
@@ -282,14 +297,12 @@ class PDFSearcherApp(QWidget):
             self._on_log(f"Error copiando {src} -> {e}")
             return
 
-        # Add a row to the results table
         row = self.table.rowCount()
         self.table.insertRow(row)
         self.table.setItem(row, 0, QTableWidgetItem(keyword))
         self.table.setItem(row, 1, QTableWidgetItem(dest.name))
         self.table.setItem(row, 2, QTableWidgetItem(str(src)))
 
-        # Append original path to rutas_encontradas.txt
         try:
             with open(self.results_txt, "a", encoding="utf-8") as f:
                 f.write(f"{datetime.now().isoformat()} - {keyword} - {src}\n")
@@ -297,7 +310,6 @@ class PDFSearcherApp(QWidget):
             self._on_log(f"Error guardando ruta en {self.results_txt}: {e}")
 
     def _on_log(self, msg: str):
-        # For now, we just print logs to stdout; could be redirected to a GUI log area.
         print(msg)
 
     def _on_finished_search(self):
@@ -307,7 +319,6 @@ class PDFSearcherApp(QWidget):
         QMessageBox.information(self, "Finalizado", "La búsqueda ha terminado (o se ha cancelado).")
 
     def save_results_now(self):
-        # Allow user to save the table to a chosen .txt (optional)
         if self.table.rowCount() == 0:
             QMessageBox.information(self, "Sin resultados", "No hay resultados para guardar.")
             return
