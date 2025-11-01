@@ -9,6 +9,7 @@ Este programa busca PDF que contengan un texto concreto dentro de rutas específ
 
   ```
   pip install -r requirements.txt
+  sudo apt install libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-render-util0
   ```
 
 ## Uso
@@ -22,7 +23,7 @@ Este programa busca PDF que contengan un texto concreto dentro de rutas específ
 
 Los PDFs encontrados se copiarán a la carpeta `PDF/`, y los resultados se guardarán en `rutas_encontradas.txt`.
 
-## Compilación para Windows
+## Compilación
 Si quieres generar un `.exe`, usa:
 
   ```
